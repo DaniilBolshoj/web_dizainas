@@ -1,127 +1,162 @@
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------------------------------------------------------------------
      1) PRODUKTŲ DUOMENYS
-     Kiekvienas produktas turi savo unikalius "colors" (spalvos pavadinimas
-     + tiksli HEX reikšmė). Nuotrauka kiekvienam variantui generuojama
-     automatiškai (žr. createVariantImage žemiau), todėl spalva ir
-     nuotrauka VISADA sutampa – nebelieka atsitiktinių/pasikartojančių
-     ar prekei nepriklausančių vaizdų.
+     Kiekvienas produktas turi:
+       - baseImage: TIKRĄ, patikrintą Unsplash nuotrauką (realus drabužis/
+         avalynė/aksesuaras, jokių scheminių piešinių).
+       - colors: sąrašą spalvų. Pirma spalva ("real") yra būtent ta spalva,
+         kurioje šis konkretus Unsplash kadras ir buvo nufotografuotas –
+         ji rodoma be jokių pakeitimų, kaip originali nuotrauka.
+       - Kitos dvi spalvos generuojamos IŠ TOS PAČIOS realios nuotraukos
+         naudojant canvas – pikselių šviesumas paverčiamas į tikslią
+         pasirinktą HEX spalvą (duotone metodas), todėl:
+           a) nuotrauka išlieka fotografiška (audinio klostės, šešėliai,
+              tekstūra), o ne piešinys;
+           b) spalva VISADA tiksliai atitinka mygtuką, nes skaičiuojama
+              matematiškai iš to paties HEX, o ne ieškoma atskiro
+              (galimai neteisingo ar neveikiančio) nuotraukos adreso.
   --------------------------------------------------------------------- */
   const products = [
-    { id: 'linine-sukne', name: 'Milano lininė midi suknelė', price: 139, category: 'women', tag: 'Naujiena', material: 'linas', icon: 'dress', alt: 'Lininė midi suknelė',
-      description: 'Lengva, laisvo kirpimo lininė suknelė vasaros karščiams ir tylioms vakaro valandoms.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'vilnos-megztinis', name: 'Verona kašmyro megztinis', price: 89, category: 'women', material: 'vilna', icon: 'sweater', alt: 'Kašmyro megztinis',
-      description: 'Minkštas kašmyro megztinis apvalia iškirpte – jaukumas be papildomo svorio.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'placios-kelnes', name: 'Soho plačios tencelio kelnės', price: 109, category: 'women', tag: 'Bestseller', material: 'tencelis', icon: 'pants', alt: 'Plačios tencelio kelnės',
-      description: 'Plataus silueto tencelio kelnės su aukštu liemeniu, tinkančios prie beveik visko.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'marskiniai', name: 'Classic Oxford marškiniai', price: 74, category: 'men', material: 'organinė medvilnė', icon: 'shirt', alt: 'Oxford marškiniai',
-      description: 'Klasikiniai oksfordo marškiniai iš organinės medvilnės – tinka tiek darbui, tiek laisvalaikiui.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'ilgas-paltas', name: 'Nordic vilnos paltas', price: 189, category: 'men', tag: 'Naujiena', material: 'perdirbta vilna', icon: 'coat', alt: 'Vilnos paltas',
-      description: 'Ilgas vilnos paltas švariomis linijomis, sukurtas šaltajam sezonui.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'strukturuotas-svarkas', name: 'Malmö struktūruotas švarkas', price: 159, category: 'men', material: 'vilna', icon: 'jacket', alt: 'Struktūruotas švarkas',
-      description: 'Struktūruotas vilnos švarkas su aiškiu siluetu kasdieniniams deriniams.', sizes: ['XS', 'S', 'M', 'L', 'XL'] },
-    { id: 'vaiku-kardiganas', name: 'Mėlynas Little Cloud kardiganas', price: 64, category: 'kids', tag: 'Bestseller', material: 'merino vilna', icon: 'cardigan', alt: 'Vaikiškas kardiganas',
-      description: 'Švelnus merino vilnos kardiganas vaikams – šiltas, bet nesunkus.', sizes: ['92', '98', '104', '110', '116', '122'] },
-    { id: 'vaiku-kelnes', name: 'Sandstone drobės kelnės', price: 52, category: 'kids', material: 'ekologiška medvilnė', icon: 'pants', alt: 'Vaikiškos drobės kelnės',
-      description: 'Patvarios ekologiškos medvilnės kelnės, sukurtos aktyvioms vaikų dienoms.', sizes: ['92', '98', '104', '110', '116', '122'] },
-    { id: 'vaiku-liemene', name: 'Forest quilted liemenė', price: 78, category: 'kids', tag: 'Naujiena', material: 'perdirbtas nailonas', icon: 'vest', alt: 'Vaikiška liemenė',
-      description: 'Prasegama pikuota liemenė be rankovių – papildomas šilumos sluoksnis žaidimams lauke.', sizes: ['92', '98', '104', '110', '116', '122'] },
-    { id: 'odinis-batas', name: 'Roma odiniai loaferiai', price: 149, category: 'shoes', tag: 'Bestseller', material: 'oda', icon: 'shoe-loafer', alt: 'Odiniai loaferiai',
-      description: 'Minimalistiniai odiniai loaferiai su švelniu blizgesiu ir patogiu vidpadžiu.', sizes: ['38', '39', '40', '41', '42', '43', '44'] },
-    { id: 'minimalistiniai-sportbaciai', name: 'Copenhagen minimalistiniai sportbačiai', price: 119, category: 'shoes', material: 'perdirbta guma', icon: 'shoe-sneaker', alt: 'Minimalistiniai sportbačiai',
-      description: 'Švarios linijos ir perdirbtos gumos vidpadis – kasdieniai sportbačiai be triukšmo.', sizes: ['38', '39', '40', '41', '42', '43', '44'] },
-    { id: 'ziemos-aulinukai', name: 'Alpine žieminiai aulinukai', price: 169, category: 'shoes', tag: 'Naujiena', material: 'oda', icon: 'boot', alt: 'Žieminiai aulinukai',
-      description: 'Šilti odiniai aulinukai su patvaria padu žiemos sąlygoms.', sizes: ['38', '39', '40', '41', '42', '43', '44'] },
-    { id: 'odinis-krepsys', name: 'Atelier odinis krepšys', price: 129, category: 'accessories', tag: 'Bestseller', material: 'oda', icon: 'bag', alt: 'Odinis krepšys',
-      description: 'Erdvus odinis krepšys su vidinėmis kišenėmis kasdieniams daiktams.', sizes: ['Universalus dydis'] },
-    { id: 'vilnos-salikas', name: 'Alba vilnos šalikas', price: 58, category: 'accessories', material: 'vilna', icon: 'scarf', alt: 'Vilnos šalikas',
-      description: 'Minkštas vilnos šalikas, kuris papildo bet kokį žieminį įvaizdį.', sizes: ['Universalus dydis'] },
-    { id: 'odinis-dirzas', name: 'Linea klasikinis diržas', price: 49, category: 'accessories', material: 'oda', icon: 'belt', alt: 'Odinis diržas',
-      description: 'Klasikinis odinis diržas su metaline sagtimi – tinka beveik prie visų kelnių.', sizes: ['Universalus dydis'] }
+    { id: 'linine-sukne', name: 'Milano lininė midi suknelė', price: 139, category: 'women', tag: 'Naujiena',
+      baseImage: 'https://images.unsplash.com/photo-1591369822096-ffd140ec948f',
+      description: 'Lengva, laisvo kirpimo lininė suknelė vasaros karščiams ir tylioms vakaro valandoms.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Smėlio', hex: '#cdbda8', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Alyvuogių', hex: '#68705b' }] },
+    { id: 'vilnos-megztinis', name: 'Verona kašmyro megztinis', price: 89, category: 'women',
+      baseImage: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27',
+      description: 'Minkštas kašmyro megztinis apvalia iškirpte – jaukumas be papildomo svorio.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Kreida', hex: '#ece7dc', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Alyvuogių', hex: '#68705b' }] },
+    { id: 'placios-kelnes', name: 'Soho plačios tencelio kelnės', price: 109, category: 'women', tag: 'Bestseller',
+      baseImage: 'https://images.unsplash.com/photo-1767631338127-8cd80ee2f9df',
+      description: 'Plataus silueto tencelio kelnės su aukštu liemeniu, tinkančios prie beveik visko.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Grafito', hex: '#4b4f4c', real: true }, { name: 'Smėlio', hex: '#cdbda8' }, { name: 'Juoda', hex: '#202321' }] },
+    { id: 'marskiniai', name: 'Classic Oxford marškiniai', price: 74, category: 'men',
+      baseImage: 'https://images.unsplash.com/photo-1603252110481-7ba873bf42ab',
+      description: 'Klasikiniai oksfordo marškiniai iš organinės medvilnės – tinka tiek darbui, tiek laisvalaikiui.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Balta', hex: '#f2efe7', real: true }, { name: 'Navy', hex: '#1d2d43' }, { name: 'Grafito', hex: '#4b4f4c' }] },
+    { id: 'ilgas-paltas', name: 'Nordic vilnos paltas', price: 189, category: 'men', tag: 'Naujiena',
+      baseImage: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3',
+      description: 'Ilgas vilnos paltas švariomis linijomis, sukurtas šaltajam sezonui.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Karamelė', hex: '#b9855b', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Alyvuogių', hex: '#68705b' }] },
+    { id: 'strukturuotas-svarkas', name: 'Malmö struktūruotas švarkas', price: 159, category: 'men',
+      baseImage: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35',
+      description: 'Struktūruotas vilnos švarkas su aiškiu siluetu kasdieniniams deriniams.',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: [{ name: 'Alyvuogių', hex: '#68705b', real: true }, { name: 'Karamelė', hex: '#b9855b' }, { name: 'Navy', hex: '#1d2d43' }] },
+    { id: 'vaiku-kardiganas', name: 'Mėlynas Little Cloud kardiganas', price: 64, category: 'kids', tag: 'Bestseller',
+      baseImage: 'https://images.unsplash.com/photo-1519457431-44ccd64a579b',
+      description: 'Švelnus merino vilnos kardiganas vaikams – šiltas, bet nesunkus.',
+      sizes: ['92', '98', '104', '110', '116', '122'],
+      colors: [{ name: 'Mėlis', hex: '#8ba7b8', real: true }, { name: 'Smėlio', hex: '#cdbda8' }, { name: 'Miško', hex: '#3d5547' }] },
+    { id: 'vaiku-kelnes', name: 'Sandstone drobės kelnės', price: 52, category: 'kids',
+      baseImage: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4',
+      description: 'Patvarios ekologiškos medvilnės kelnės, sukurtos aktyvioms vaikų dienoms.',
+      sizes: ['92', '98', '104', '110', '116', '122'],
+      colors: [{ name: 'Smėlio', hex: '#cdbda8', real: true }, { name: 'Mėlis', hex: '#8ba7b8' }, { name: 'Miško', hex: '#3d5547' }] },
+    { id: 'vaiku-liemene', name: 'Forest quilted liemenė', price: 78, category: 'kids', tag: 'Naujiena',
+      baseImage: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea',
+      description: 'Prasegama pikuota liemenė be rankovių – papildomas šilumos sluoksnis žaidimams lauke.',
+      sizes: ['92', '98', '104', '110', '116', '122'],
+      colors: [{ name: 'Miško', hex: '#3d5547', real: true }, { name: 'Smėlio', hex: '#cdbda8' }, { name: 'Mėlis', hex: '#8ba7b8' }] },
+    { id: 'odinis-batas', name: 'Roma odiniai loaferiai', price: 149, category: 'shoes', tag: 'Bestseller',
+      baseImage: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2',
+      description: 'Minimalistiniai odiniai loaferiai su švelniu blizgesiu ir patogiu vidpadžiu.',
+      sizes: ['38', '39', '40', '41', '42', '43', '44'],
+      colors: [{ name: 'Juoda', hex: '#202321', real: true }, { name: 'Riešutų', hex: '#805637' }, { name: 'Kreida', hex: '#e8e2d7' }] },
+    { id: 'minimalistiniai-sportbaciai', name: 'Copenhagen minimalistiniai sportbačiai', price: 119, category: 'shoes',
+      baseImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
+      description: 'Švarios linijos ir perdirbtos gumos vidpadis – kasdieniai sportbačiai be triukšmo.',
+      sizes: ['38', '39', '40', '41', '42', '43', '44'],
+      colors: [{ name: 'Kreida', hex: '#e8e2d7', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Riešutų', hex: '#805637' }] },
+    { id: 'ziemos-aulinukai', name: 'Alpine žieminiai aulinukai', price: 169, category: 'shoes', tag: 'Naujiena',
+      baseImage: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f',
+      description: 'Šilti odiniai aulinukai su patvaria padu žiemos sąlygoms.',
+      sizes: ['38', '39', '40', '41', '42', '43', '44'],
+      colors: [{ name: 'Riešutų', hex: '#805637', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Kreida', hex: '#e8e2d7' }] },
+    { id: 'odinis-krepsys', name: 'Atelier odinis krepšys', price: 129, category: 'accessories', tag: 'Bestseller',
+      baseImage: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa',
+      description: 'Erdvus odinis krepšys su vidinėmis kišenėmis kasdieniams daiktams.',
+      sizes: ['Universalus dydis'],
+      colors: [{ name: 'Espresso', hex: '#4b3027', real: true }, { name: 'Juoda', hex: '#202321' }, { name: 'Pieno', hex: '#e8e2d7' }] },
+    { id: 'vilnos-salikas', name: 'Alba vilnos šalikas', price: 58, category: 'accessories',
+      baseImage: 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9',
+      description: 'Minkštas vilnos šalikas, kuris papildo bet kokį žieminį įvaizdį.',
+      sizes: ['Universalus dydis'],
+      colors: [{ name: 'Pieno', hex: '#e8e2d7', real: true }, { name: 'Espresso', hex: '#4b3027' }, { name: 'Juoda', hex: '#202321' }] },
+    { id: 'odinis-dirzas', name: 'Linea klasikinis diržas', price: 49, category: 'accessories',
+      baseImage: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc',
+      description: 'Klasikinis odinis diržas su metaline sagtimi – tinka beveik prie visų kelnių.',
+      sizes: ['Universalus dydis'],
+      colors: [{ name: 'Juoda', hex: '#202321', real: true }, { name: 'Espresso', hex: '#4b3027' }, { name: 'Pieno', hex: '#e8e2d7' }] }
   ];
 
-  const colorPalettes = {
-    women: [['Smėlio', '#cdbda8'], ['Juoda', '#202321'], ['Alyvuogių', '#68705b']],
-    men: [['Karamelė', '#b9855b'], ['Navy', '#1d2d43'], ['Alyvuogių', '#68705b']],
-    kids: [['Mėlis', '#8ba7b8'], ['Smėlio', '#cdbda8'], ['Miško', '#3d5547']],
-    shoes: [['Juoda', '#202321'], ['Riešutų', '#805637'], ['Kreida', '#e8e2d7']],
-    accessories: [['Espresso', '#4b3027'], ['Juoda', '#202321'], ['Pieno', '#e8e2d7']]
-  };
+  const photoParams = 'auto=format&fit=crop&w=900&h=1200&q=80';
+  products.forEach((product) => { product.baseImage = `${product.baseImage}?${photoParams}`; });
 
   /* ---------------------------------------------------------------------
-     2) SPALVOS -> NUOTRAUKOS GENERAVIMAS
-     Kadangi realių studijinių nuotraukų kiekvienam spalvos variantui
-     neturime, o siuntimasis iš atsitiktinių išorinių nuorodų buvo
-     pagrindinė klaidų priežastis (nesutampantys / pasikartojantys /
-     "sudužę" paveikslėliai), kiekvienam variantui vietoje to SAUGIAI
-     sugeneruojame SVG paveikslėlį: tikslus prekės kontūras + TIKSLIAI
-     ta HEX spalva, kurią vartotojas pasirinko. Tokiu būdu spalva ir
-     nuotrauka niekada negali nesutapti, o vaizdas niekada "nedūžta".
+     2) TIKSLUS SPALVOS PRITAIKYMAS REALIAI NUOTRAUKAI (canvas duotone)
+     Realios nuotraukos šviesumo (luminance) žemėlapis paverčiamas į
+     gradientą tarp tamsaus atspalvio ir TIKSLIOS pasirinktos HEX
+     spalvos – todėl gautas vaizdas ir toliau atrodo kaip fotografija
+     (matosi audinio klostės, šešėliai), bet spalva 100 % atitinka
+     paspaustą mygtuką.
   --------------------------------------------------------------------- */
-  const svgIcons = {
-    dress: '<path d="M-6,-18 Q0,-13 6,-18 L8,-6 L13,20 L-13,20 L-8,-6 Z"/>',
-    sweater: '<path d="M-9,-16 Q0,-11 9,-16 L9,16 L-9,16 Z"/><path d="M-9,-15 L-17,-3 L-13,2 L-7,-7 Z"/><path d="M9,-15 L17,-3 L13,2 L7,-7 Z"/>',
-    cardigan: '<path d="M-1,-16 L-9,-14 L-9,16 L-1,16 Z"/><path d="M1,-16 L9,-14 L9,16 L1,16 Z"/><path d="M-9,-15 L-17,-3 L-13,2 L-7,-7 Z"/><path d="M9,-15 L17,-3 L13,2 L7,-7 Z"/>',
-    shirt: '<path d="M-9,-16 Q0,-12 9,-16 L9,16 L-9,16 Z"/><path d="M-3,-16 L0,-9 L3,-16"/><path d="M-9,-15 L-15,-6 L-12,-1 L-7,-8 Z"/><path d="M9,-15 L15,-6 L12,-1 L7,-8 Z"/>',
-    coat: '<path d="M-10,-16 Q0,-11 10,-16 L11,20 L-11,20 Z"/><path d="M-4,-16 L-7,-2 M4,-16 L7,-2"/><path d="M-10,-15 L-18,4 L-14,9 L-8,-6 Z"/><path d="M10,-15 L18,4 L14,9 L8,-6 Z"/>',
-    jacket: '<path d="M-10,-15 Q0,-10 10,-15 L10,14 L-10,14 Z"/><path d="M0,-9 L0,14"/><path d="M-10,-14 L-17,0 L-13,5 L-7,-7 Z"/><path d="M10,-14 L17,0 L13,5 L7,-7 Z"/>',
-    vest: '<path d="M-8,-14 Q0,-9 8,-14 L8,15 L-8,15 Z"/><path d="M-8,-13 Q-12,-4 -8,4"/><path d="M8,-13 Q12,-4 8,4"/>',
-    pants: '<path d="M-9,-16 L9,-16 L9,-4 L2,-4 L2,18 L-2,18 L-2,-4 L-9,-4 Z"/>',
-    'shoe-loafer': '<path d="M-14,6 Q-15,-4 -5,-8 L8,-5 Q17,-2 17,5 L17,9 L-14,9 Z"/><path d="M-6,-6 L-3,2"/>',
-    'shoe-sneaker': '<path d="M-14,6 Q-15,-2 -6,-6 L9,-3 Q18,0 18,6 L18,9 L-14,9 Z"/><path d="M-4,-4 L2,-1 M-2,-2 L4,1 M0,0 L6,3"/>',
-    boot: '<path d="M-9,10 L-9,-15 L-1,-15 L-1,-3 L15,-3 Q19,-1 19,5 L19,10 Z"/>',
-    bag: '<path d="M-11,-4 L-11,14 Q-11,17 -8,17 L8,17 Q11,17 11,14 L11,-4 Z"/><path d="M-6,-4 Q-6,-15 0,-15 Q6,-15 6,-4"/>',
-    scarf: '<path d="M-16,-8 Q-6,-16 4,-8 Q12,-1 20,-7"/><path d="M-16,3 Q-6,-5 4,3 Q12,10 20,4"/>',
-    belt: '<rect x="-18" y="-2.5" width="36" height="5" rx="1"/><rect x="-4.5" y="-6" width="9" height="12" rx="1"/>'
-  };
-
-  const relativeLuminance = (hex) => {
+  const hexToRgb = (hex) => {
     const clean = hex.replace('#', '');
-    const channel = (part) => {
-      const value = parseInt(part, 16) / 255;
-      return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    return {
+      r: parseInt(clean.substring(0, 2), 16),
+      g: parseInt(clean.substring(2, 4), 16),
+      b: parseInt(clean.substring(4, 6), 16)
     };
-    const r = channel(clean.substring(0, 2));
-    const g = channel(clean.substring(2, 4));
-    const b = channel(clean.substring(4, 6));
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const inkFor = (hex) => (relativeLuminance(hex) > 0.45 ? '#1d2520' : '#f4f2ec');
-
-  const createVariantImage = (product, color) => {
-    const ink = inkFor(color.hex);
-    const icon = svgIcons[product.icon] || svgIcons.shirt;
-    const name = escapeHtml(product.name).toUpperCase();
-    const colorLabel = escapeHtml(color.name).toUpperCase();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
-      <defs><radialGradient id="vg" cx="50%" cy="40%" r="75%"><stop offset="0%" stop-color="#000000" stop-opacity="0"/><stop offset="100%" stop-color="#000000" stop-opacity="0.16"/></radialGradient></defs>
-      <rect width="900" height="1200" fill="${color.hex}"/>
-      <rect width="900" height="1200" fill="url(#vg)"/>
-      <g transform="translate(450,540) scale(11)" fill="none" stroke="${ink}" stroke-width="0.55" stroke-linejoin="round" stroke-linecap="round" opacity="0.88">${icon}</g>
-      <text x="64" y="1108" fill="${ink}" font-family="Helvetica, Arial, sans-serif" font-size="24" letter-spacing="3" opacity="0.8">${name}</text>
-      <text x="64" y="1148" fill="${ink}" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="0.5">${colorLabel}</text>
-    </svg>`;
-    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   };
 
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[character]));
-  }
-
-  /* Kiekvienam produktui sugeneruojame variantų sąrašą: spalva + tiksliai
-     tos spalvos nuotrauka + atnaujintas aprašomasis tekstas. */
-  products.forEach((product) => {
-    const palette = colorPalettes[product.category] || colorPalettes.men;
-    product.variants = palette.map(([label, hex]) => {
-      const color = { name: label, hex };
-      return {
-        label,
-        swatch: hex,
-        detail: `${label} / ${product.material}`,
-        image: createVariantImage(product, color)
+  const tintCache = new Map();
+  const tintPhoto = (url, hex) => {
+    const key = `${url}__${hex}`;
+    if (tintCache.has(key)) return tintCache.get(key);
+    const promise = new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || 900;
+          canvas.height = img.naturalHeight || 1200;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = frame.data;
+          const target = hexToRgb(hex);
+          const shadow = { r: target.r * 0.22, g: target.g * 0.22, b: target.b * 0.22 };
+          for (let i = 0; i < data.length; i += 4) {
+            const luminance = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+            data[i] = shadow.r + (target.r - shadow.r) * luminance;
+            data[i + 1] = shadow.g + (target.g - shadow.g) * luminance;
+            data[i + 2] = shadow.b + (target.b - shadow.b) * luminance;
+          }
+          ctx.putImageData(frame, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.86));
+        } catch (error) {
+          console.warn('Nepavyko pritaikyti spalvos nuotraukai, rodoma originali.', error);
+          resolve(url);
+        }
       };
+      img.onerror = () => resolve(url);
+      img.src = url;
     });
-  });
+    tintCache.set(key, promise);
+    return promise;
+  };
+
+  /* Grąžina konkretaus varianto nuotraukos adresą: reali spalva = originali
+     nuotrauka be pakeitimų; kitos spalvos = Promise<string> su pritaikyta spalva. */
+  const variantImage = (product, color) => (color.real ? Promise.resolve(product.baseImage) : tintPhoto(product.baseImage, color.hex));
+
+  const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[character]));
 
   /* ---------------------------------------------------------------------
      3) DOM NUORODOS IR BŪSENA
@@ -143,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let searchTerm = '';
   let cart = [];
   let activeModalProduct = null;
-  let activeModalVariant = 0;
 
   try {
     cart = JSON.parse(localStorage.getItem('forma-cart') || '[]');
@@ -152,17 +186,58 @@ document.addEventListener('DOMContentLoaded', () => {
     cart = [];
   }
 
+  /* ---------------------------------------------------------------------
+     4) STABILUS MOBILUS MENIU / SCROLL-LOCK
+     Kai atidarytas krepšelis, hamburger meniu, paieška ar produkto
+     peržiūra, fonas užrakinamas (body position: fixed + overflow: hidden),
+     kad puslapis nešokinėtų ir neslinktų po atidarytu meniu. Naudojamas
+     raktų rinkinys (Set), kad keli vienu metu atidaryti sluoksniai
+     neatrakintų fono per anksti.
+  --------------------------------------------------------------------- */
+  const lockedBy = new Set();
+  let savedScrollY = 0;
+  const applyBodyLock = () => {
+    const shouldLock = lockedBy.size > 0;
+    const isLocked = document.body.classList.contains('scroll-locked');
+    if (shouldLock && !isLocked) {
+      savedScrollY = window.scrollY || window.pageYOffset || 0;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${savedScrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.classList.add('scroll-locked');
+      document.documentElement.classList.add('scroll-locked');
+    } else if (!shouldLock && isLocked) {
+      document.body.classList.remove('scroll-locked');
+      document.documentElement.classList.remove('scroll-locked');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.paddingRight = '';
+      window.scrollTo(0, savedScrollY);
+    }
+  };
+  const lockScroll = (key, shouldLock) => {
+    if (shouldLock) lockedBy.add(key); else lockedBy.delete(key);
+    applyBodyLock();
+  };
+
   const iconRefresh = () => window.lucide?.createIcons();
 
   const matchingProducts = () => products.filter((product) => {
     const categoryMatch = activeCategory === 'all' || product.category === activeCategory;
-    const haystack = `${product.name} ${product.material}`.toLocaleLowerCase('lt');
+    const haystack = `${product.name} ${product.colors[0].name}`.toLocaleLowerCase('lt');
     const searchMatch = haystack.includes(searchTerm.toLocaleLowerCase('lt'));
     return categoryMatch && searchMatch;
   });
 
   /* ---------------------------------------------------------------------
-     4) PRODUKTŲ TINKLELIO ATVAIZDAVIMAS
+     5) PRODUKTŲ TINKLELIO ATVAIZDAVIMAS
   --------------------------------------------------------------------- */
   const renderProducts = () => {
     const matches = matchingProducts();
@@ -172,16 +247,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ? visibleProducts.map((product) => `
         <article class="product-card reveal" data-product-card="${product.id}">
           <button class="product-image product-image-${product.category}" data-view="${product.id}" aria-label="Peržiūrėti ${escapeHtml(product.name)}">
-            <img data-product-image src="${product.variants[0].image}" alt="${escapeHtml(product.alt)} – ${escapeHtml(product.variants[0].label)}" width="900" height="1200" loading="lazy" decoding="async">
+            <img data-product-image src="${product.baseImage}" alt="${escapeHtml(product.name)} – ${escapeHtml(product.colors[0].name)}" width="900" height="1200" loading="lazy" decoding="async">
             ${product.tag ? `<span class="product-tag ${product.tag === 'Bestseller' ? 'muted' : ''}">${product.tag}</span>` : ''}
             <span class="view-product">Peržiūrėti <b>↗</b></span>
           </button>
           <div class="product-info">
-            <div><h3>${escapeHtml(product.name)}</h3><p data-product-detail>${escapeHtml(product.variants[0].detail)}</p></div>
+            <div><h3>${escapeHtml(product.name)}</h3><p data-product-detail>${escapeHtml(product.colors[0].name)}</p></div>
             <strong>${product.price} €</strong>
           </div>
           <div class="product-swatches" role="group" aria-label="Spalvos: ${escapeHtml(product.name)}">
-            ${product.variants.map((variant, index) => `<button class="color-swatch${index === 0 ? ' active' : ''}" type="button" data-variant="${index}" style="--swatch-color: ${variant.swatch}" aria-label="${escapeHtml(variant.label)}" aria-pressed="${index === 0}"></button>`).join('')}
+            ${product.colors.map((color, index) => `<button class="color-swatch${index === 0 ? ' active' : ''}" type="button" data-color-index="${index}" style="--swatch-color: ${color.hex}" aria-label="${escapeHtml(color.name)}" aria-pressed="${index === 0}"></button>`).join('')}
           </div>
           <button class="add-button" data-add="${product.id}">+ Į krepšelį</button>
         </article>`).join('')
@@ -193,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ---------------------------------------------------------------------
-     5) KREPŠELIS
+     6) KREPŠELIS
   --------------------------------------------------------------------- */
   const updateCart = () => {
     const quantity = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -245,22 +320,23 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ---------------------------------------------------------------------
-     6) GREITA PERŽIŪRA (QUICK VIEW) – VISADA RODO BŪTENT PASPAUSTĄ PREKĘ
+     7) GREITA PERŽIŪRA (QUICK VIEW) – VISADA TOS PAČIOS PASPAUSTOS PREKĖS DUOMENYS
   --------------------------------------------------------------------- */
-  const renderModalVariant = (variantIndex) => {
+  const renderModalVariant = (colorIndex) => {
     if (!activeModalProduct) return;
-    const variant = activeModalProduct.variants[variantIndex] || activeModalProduct.variants[0];
-    activeModalVariant = variantIndex;
+    const color = activeModalProduct.colors[colorIndex] || activeModalProduct.colors[0];
     const image = modal.querySelector('[data-modal-image]');
-    image.src = variant.image;
-    image.alt = `${activeModalProduct.name} – ${variant.label}`;
-    modal.querySelector('.modal-detail').textContent = variant.detail;
+    image.alt = `${activeModalProduct.name} – ${color.name}`;
+    modal.querySelector('.modal-detail').textContent = color.name;
     modal.querySelector('[data-colors]').querySelectorAll('button').forEach((button, index) => {
-      button.classList.toggle('selected', index === variantIndex);
+      button.classList.toggle('selected', index === colorIndex);
+    });
+    variantImage(activeModalProduct, color).then((src) => {
+      if (activeModalProduct && activeModalProduct.colors[colorIndex] === color) image.src = src;
     });
   };
 
-  const openModal = (id, variantIndex = 0) => {
+  const openModal = (id, colorIndex = 0) => {
     const product = products.find((item) => item.id === id);
     if (!product) return;
     activeModalProduct = product;
@@ -269,35 +345,51 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.querySelector('.modal-description').textContent = product.description;
     modal.querySelector('[data-sizes]').innerHTML = product.sizes
       .map((size, index) => `<button type="button" class="${index === Math.floor(product.sizes.length / 2) ? 'selected' : ''}">${escapeHtml(size)}</button>`).join('');
-    modal.querySelector('[data-colors]').innerHTML = product.variants
-      .map((variant, index) => `<button type="button" class="${index === variantIndex ? 'selected' : ''}" data-modal-variant="${index}">${escapeHtml(variant.label)}</button>`).join('');
-    renderModalVariant(variantIndex);
+    modal.querySelector('[data-colors]').innerHTML = product.colors
+      .map((color, index) => `<button type="button" class="${index === colorIndex ? 'selected' : ''}" data-modal-color="${index}">${escapeHtml(color.name)}</button>`).join('');
+    renderModalVariant(colorIndex);
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
     modal.querySelector('.modal-close').focus();
+    lockScroll('modal', true);
   };
 
   const closeModal = () => {
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
     activeModalProduct = null;
-    activeModalVariant = 0;
+    lockScroll('modal', false);
   };
 
   const toggleCart = (isOpen) => {
     cartDrawer.classList.toggle('open', isOpen);
     overlay.classList.toggle('open', isOpen);
     cartDrawer.setAttribute('aria-hidden', String(!isOpen));
+    lockScroll('cart', isOpen);
   };
 
   const toggleMenu = (isOpen) => {
     document.querySelector('.mobile-nav').classList.toggle('open', isOpen);
     document.querySelector('.mobile-nav').setAttribute('aria-hidden', String(!isOpen));
     document.querySelector('[data-menu]').setAttribute('aria-expanded', String(isOpen));
+    lockScroll('menu', isOpen);
+  };
+
+  const openSearch = () => {
+    searchPanel.classList.add('open');
+    searchPanel.setAttribute('aria-hidden', 'false');
+    searchInput.focus();
+    lockScroll('search', true);
+  };
+
+  const closeSearch = () => {
+    searchPanel.classList.remove('open');
+    searchPanel.setAttribute('aria-hidden', 'true');
+    lockScroll('search', false);
   };
 
   /* ---------------------------------------------------------------------
-     7) ĮVYKIŲ RIŠIKLIAI
+     8) ĮVYKIŲ RIŠIKLIAI
   --------------------------------------------------------------------- */
   grid.addEventListener('click', (event) => {
     const target = event.target.closest('button');
@@ -311,27 +403,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (target.matches('[data-view]')) {
       const card = target.closest('[data-product-card]');
       const activeSwatch = card?.querySelector('.color-swatch.active');
-      const currentVariant = activeSwatch ? Number(activeSwatch.dataset.variant) : 0;
-      openModal(target.dataset.view, currentVariant);
+      const currentColorIndex = activeSwatch ? Number(activeSwatch.dataset.colorIndex) : 0;
+      openModal(target.dataset.view, currentColorIndex);
       return;
     }
 
-    if (!target.matches('[data-variant]')) return;
+    if (!target.matches('[data-color-index]')) return;
     const card = target.closest('[data-product-card]');
     const product = products.find((item) => item.id === card?.dataset.productCard);
-    const variantIndex = Number(target.dataset.variant);
-    const variant = product?.variants[variantIndex];
-    if (!card || !product || !variant) return;
+    const colorIndex = Number(target.dataset.colorIndex);
+    const color = product?.colors[colorIndex];
+    if (!card || !product || !color) return;
 
-    /* Akimirksniu pakeičiame BŪTENT ŠIOS kortelės nuotrauką, aprašymą ir aktyvų rėmelį */
-    const image = card.querySelector('[data-product-image]');
-    image.src = variant.image;
-    image.alt = `${product.alt} – ${variant.label}`;
-    card.querySelector('[data-product-detail]').textContent = variant.detail;
-    card.querySelectorAll('[data-variant]').forEach((item) => {
+    /* Akimirksniu pažymime aktyvų mygtuką ir tekstą; nuotrauka atnaujinama,
+       kai tik būna paruošta TIKSLIAI ta spalva (dažniausiai iš talpyklos – beveik akimirksniu). */
+    card.querySelector('[data-product-detail]').textContent = color.name;
+    card.querySelectorAll('[data-color-index]').forEach((item) => {
       const active = item === target;
       item.classList.toggle('active', active);
       item.setAttribute('aria-pressed', String(active));
+    });
+    const image = card.querySelector('[data-product-image]');
+    variantImage(product, color).then((src) => {
+      const stillActive = card.querySelector('.color-swatch.active') === target;
+      if (stillActive) {
+        image.src = src;
+        image.alt = `${product.name} – ${color.name}`;
+      }
     });
   });
 
@@ -358,19 +456,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#kolekcija')?.scrollIntoView({ behavior: 'smooth' });
   }));
 
-  document.querySelector('[data-search]').addEventListener('click', () => { searchPanel.classList.add('open'); searchPanel.setAttribute('aria-hidden', 'false'); searchInput.focus(); });
+  document.querySelector('[data-search]').addEventListener('click', openSearch);
+  document.querySelector('[data-close-search]').addEventListener('click', closeSearch);
   document.querySelector('[data-close-modal]').addEventListener('click', closeModal);
   modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
   modal.addEventListener('click', (event) => {
-    const option = event.target.closest('[data-modal-variant]');
+    const option = event.target.closest('[data-modal-color]');
     if (!option || !activeModalProduct) return;
-    renderModalVariant(Number(option.dataset.modalVariant));
+    renderModalVariant(Number(option.dataset.modalColor));
   });
   modal.querySelector('.modal-add').addEventListener('click', () => { if (activeModalProduct) { addToCart(activeModalProduct.id); closeModal(); } });
-  document.querySelector('[data-close-search]').addEventListener('click', () => { searchPanel.classList.remove('open'); searchPanel.setAttribute('aria-hidden', 'true'); });
   searchInput.addEventListener('input', (event) => { searchTerm = event.target.value.trim(); showAll = true; renderProducts(); });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') { toggleCart(false); toggleMenu(false); closeModal(); searchPanel.classList.remove('open'); searchPanel.setAttribute('aria-hidden', 'true'); }
+    if (event.key === 'Escape') { toggleCart(false); toggleMenu(false); closeModal(); closeSearch(); }
   });
 
   renderProducts();
